@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!--
+    twin3 — primary mark. Transparent corners; works on Cream or Forest backgrounds.
+    Palette: muted #28382D / #E5DEC4 (matches public Twitter avatar).
+    Source of truth: https://twin3.ai/design-guidelines/
+  -->
+  <!-- Left half of disc: dark forest -->
+  <path d="M 512 32 A 480 480 0 0 0 512 992 Z" fill="#28382d"/>
+  <!-- Right half of disc: cream -->
+  <path d="M 512 32 A 480 480 0 0 1 512 992 Z" fill="#e5dec4"/>
+  <!-- Outer outline -->
+  <circle cx="512" cy="512" r="480" fill="none" stroke="#28382d" stroke-width="32"/>
+  <!-- Left square (cream on dark) -->
+  <rect x="200" y="440" width="150" height="150" fill="#e5dec4"/>
+  <!-- Right square (dark on cream) -->
+  <rect x="670" y="440" width="150" height="150" fill="#28382d"/>
+  <!-- Centre split (cream/dark mirrored) -->
+  <path d="M 512 480 A 32 32 0 0 0 512 544 Z" fill="#e5dec4"/>
+  <path d="M 512 480 A 32 32 0 0 1 512 544 Z" fill="#28382d"/>
+</svg>

@@ -61,7 +61,7 @@ const QUESTIONS = [
   }
 ];
 
-const PLAYER_COLORS = ["#3de596", "#ff7c6d", "#ffb84d", "#4adcf7", "#7267f8", "#f5f7ff"];
+const PLAYER_COLORS = ["#8DAE9A", "#D8744F", "#FFD66E", "#C5D9CB", "#4A7C59", "#F5F3EE"];
 const PLAYERS = [
   { name: "Maya", initial: "M", ready: true },
   { name: "Leo", initial: "L", ready: true },
@@ -397,7 +397,7 @@ function setupMatrixField() {
 
   function draw() {
     ctx.clearRect(0, 0, width, height);
-    ctx.strokeStyle = "rgba(112, 126, 172, 0.12)";
+    ctx.strokeStyle = "rgba(45, 74, 53, 0.10)";
     ctx.lineWidth = 0.7;
     for (let x = 0; x < width; x += 56) {
       ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, height); ctx.stroke();
@@ -418,7 +418,7 @@ function setupMatrixField() {
         const dy = node.y - other.y;
         const distance = Math.hypot(dx, dy);
         if (distance < 145) {
-          ctx.strokeStyle = `rgba(101, 115, 205, ${0.14 * (1 - distance / 145)})`;
+          ctx.strokeStyle = `rgba(74, 124, 89, ${0.14 * (1 - distance / 145)})`;
           ctx.beginPath();
           ctx.moveTo(node.x, node.y);
           ctx.lineTo(other.x, other.y);
@@ -426,7 +426,7 @@ function setupMatrixField() {
         }
       }
 
-      ctx.fillStyle = index % 5 === 0 ? "rgba(74,220,247,.75)" : "rgba(126,112,250,.6)";
+      ctx.fillStyle = index % 5 === 0 ? "rgba(192,81,47,.58)" : "rgba(74,124,89,.45)";
       ctx.beginPath();
       ctx.arc(node.x, node.y, node.r, 0, Math.PI * 2);
       ctx.fill();
