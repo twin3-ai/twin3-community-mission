@@ -97,6 +97,7 @@ const soundToggle = document.querySelector("#sound-toggle");
 
 let questionIndex = 0;
 let correctAnswers = 0;
+let totalReward = 0;
 let selectedAnswers = [];
 let timerId = null;
 let timeLeft = 20;
@@ -272,7 +273,10 @@ function selectAnswer(choice) {
     buttons[item.correct].classList.add("correct");
     if (isCorrect) {
       correctAnswers += 1;
-      runningReward.textContent = `${correctAnswers * 5} $PoC`;
+      // Adjust reward calculation to account for initial timer tick
+      const rewardPerAnswer = Math.max(1, Math.floor(5 * ((timeLeft + 1) / 20)));
+      totalReward += rewardPerAnswer;
+      runningReward.textContent = `${totalReward} $PoC`;
       playCorrect();
     } else {
       playWrong();
@@ -299,7 +303,7 @@ function finishMission() {
   stopAmbient();
   const rank = correctAnswers >= 4 ? 1 : correctAnswers >= 2 ? 2 : 3;
   rankMedallion.textContent = rank;
-  finalReward.textContent = `${correctAnswers * 5} $PoC`;
+  finalReward.textContent = `${totalReward} $PoC`;
   finalScore.textContent = `${correctAnswers} / ${QUESTIONS.length}`;
   resultTitle.textContent = correctAnswers >= 4 ? "Mission complete" : "Matrix training complete";
   resultSubtitle.textContent = correctAnswers >= 4
@@ -315,6 +319,7 @@ function resetGame() {
   correctAnswers = 0;
   questionIndex = 0;
   selectedAnswers = [];
+  totalReward = 0;
   reviewPanel.hidden = true;
   PLAYERS.forEach((player, index) => player.ready = index < 3);
   readyButton.disabled = false;
