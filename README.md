@@ -54,3 +54,7 @@ as a full-viewport experience and is packaged for Codex Sites with vinext.
 ## License
 
 [MIT](LICENSE)
+
+## Product specifications
+
+- [twin3 $PoC Soulbound ERC-20 功能規劃](docs/POC_SOULBOUND_TOKEN_FUNCTION_SPEC_ZH.md)
