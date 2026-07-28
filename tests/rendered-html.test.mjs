@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
+import vm from "node:vm";
 
 async function render() {
   const workerUrl = new URL("../dist/server/index.js", import.meta.url);
@@ -45,4 +46,48 @@ test("ships the ten-question, no-repeat mission contract", async () => {
   assert.match(game, /journey\.seen\.includes\(question\.id\)/);
   assert.match(game, /revealPanel\.hidden = false/);
   assert.match(game, /QUESTION_BANK\.length - journey\.seen\.length/);
+});
+
+function readBrowserAsset(source, globalName) {
+  const context = { window: {} };
+  vm.runInNewContext(source, context);
+  return context.window[globalName];
+}
+
+test("ships complete, ID-stable localization for eight languages", async () => {
+  const [html, uiSource, questionSource, game] = await Promise.all([
+    readFile(new URL("../public/game/index.html", import.meta.url), "utf8"),
+    readFile(new URL("../public/game/i18n-ui.js", import.meta.url), "utf8"),
+    readFile(new URL("../public/game/i18n-questions.js", import.meta.url), "utf8"),
+    readFile(new URL("../public/game/game.js", import.meta.url), "utf8"),
+  ]);
+  const ui = readBrowserAsset(uiSource, "MISSION_UI_TRANSLATIONS");
+  const questions = readBrowserAsset(questionSource, "MISSION_QUESTION_TRANSLATIONS");
+  const locales = ["en", "zh-TW", "zh-CN", "ja", "ko", "es", "pt-BR", "vi"];
+  const translatedLocales = locales.filter(locale => locale !== "en");
+  const englishKeys = Object.keys(ui.en).sort();
+  const sourceIds = [...game.matchAll(/id: "((?:web3|agent|matrix)-\d{3})"/g)].map(match => match[1]).sort();
+
+  assert.deepEqual(Object.keys(ui), locales);
+  for (const locale of locales) {
+    assert.deepEqual(Object.keys(ui[locale]).sort(), englishKeys, `${locale} UI keys differ`);
+  }
+  assert.deepEqual(Object.keys(questions), translatedLocales);
+  for (const locale of translatedLocales) {
+    assert.deepEqual(Object.keys(questions[locale]).sort(), sourceIds, `${locale} question IDs differ`);
+    for (const item of Object.values(questions[locale])) {
+      assert.equal(typeof item.q, "string");
+      assert.ok(Array.isArray(item.o));
+      assert.ok(item.o.length === 2 || item.o.length === 4);
+      assert.equal(typeof item.e, "string");
+    }
+  }
+
+  assert.match(html, /id="language-select"/);
+  assert.ok(html.indexOf("i18n-ui.js") < html.indexOf("i18n-questions.js"));
+  assert.ok(html.indexOf("i18n-questions.js") < html.indexOf("game.js"));
+  assert.match(game, /localStorage\.setItem\(LOCALE_KEY, currentLocale\)/);
+  assert.match(game, /window\.MISSION_QUESTION_TRANSLATIONS/);
+  assert.match(game, /selectedAnswers\.push\(\{ id: item\.id, choice, isCorrect \}\)/);
+  assert.match(game, /copy\.o\.length === item\.options\.length/);
 });

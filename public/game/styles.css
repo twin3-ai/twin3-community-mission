@@ -26,6 +26,17 @@ body {
 }
 button, a { font: inherit; }
 button { color: inherit; }
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
 
 #matrix-field {
   position: fixed;
@@ -72,6 +83,29 @@ button { color: inherit; }
   box-shadow: 0 0 0 5px rgba(76, 124, 89, 0.12);
 }
 .header-actions { justify-content: flex-end; gap: 8px; }
+.language-control { position: relative; }
+.language-control::after {
+  content: "⌄";
+  position: absolute;
+  right: 9px;
+  top: 50%;
+  color: var(--muted);
+  pointer-events: none;
+  transform: translateY(-55%);
+}
+.language-control select {
+  min-width: 112px;
+  height: 38px;
+  padding: 0 28px 0 11px;
+  border: 1px solid var(--line-strong);
+  border-radius: 5px;
+  color: var(--ink);
+  background: var(--paper);
+  appearance: none;
+  cursor: pointer;
+  font: 700 10px/1 "Space Mono", monospace;
+}
+.language-control select:hover, .language-control select:focus-visible { border-color: var(--coral); outline: none; }
 .icon-button {
   width: 38px;
   aspect-ratio: 1;
@@ -109,6 +143,14 @@ main {
   font-size: 8px;
 }
 h1, h2 { margin: 0; font-family: "Newsreader", serif; font-weight: 600; letter-spacing: 0; text-wrap: balance; }
+html[lang^="zh"] h1, html[lang^="zh"] h2,
+html[lang="ja"] h1, html[lang="ja"] h2,
+html[lang="ko"] h1, html[lang="ko"] h2,
+html[lang^="zh"] .mission-lead,
+html[lang="ja"] .mission-lead,
+html[lang="ko"] .mission-lead {
+  font-family: "PingFang TC", "PingFang SC", "Hiragino Sans", "Yu Gothic", "Noto Sans CJK", sans-serif;
+}
 h1 { font-size: clamp(54px, 7vw, 84px); line-height: .93; }
 .mission-lead {
   max-width: 620px;
@@ -314,6 +356,9 @@ h1 { font-size: clamp(54px, 7vw, 84px); line-height: .93; }
   font: 700 12px/1 "Space Mono", monospace;
 }
 .answer-copy { font-size: 14px; line-height: 1.36; }
+.answer-copy, .question-stage h2, .reveal-panel p, .review-row strong, .review-row small {
+  overflow-wrap: anywhere;
+}
 .answer-button.correct { border-color: var(--forest-bright); background: #e6eee6; }
 .answer-button.correct .letter { color: #fff; border-color: var(--forest); background: var(--forest); }
 .answer-button.wrong { border-color: var(--danger); background: #f5e5e1; }
@@ -341,7 +386,8 @@ h1 { font-size: clamp(54px, 7vw, 84px); line-height: .93; }
 .reveal-panel strong { font-size: 13px; }
 .reveal-panel p { margin: 2px 0 0; color: #4d544e; font-size: 12px; }
 .next-button { min-width: 170px; padding: 0 16px; color: #fff; background: var(--forest); }
-.next-button span { margin-left: 6px; color: inherit; font-size: 15px; }
+.next-button > span:last-child { margin-left: 6px; color: inherit; font-size: 15px; }
+.next-button .next-copy { color: inherit; font-size: inherit; }
 .race-strip { justify-content: space-between; gap: 16px; margin-top: 14px; }
 .network-pulse { gap: 10px; color: var(--muted); font-size: 11px; }
 .network-pulse strong { color: var(--ink); font-family: "Space Mono", monospace; }
@@ -447,6 +493,12 @@ footer {
 }
 
 @media (max-width: 480px) {
+  .game-header { padding-inline: 12px; }
+  .brand span { display: none; }
+  .brand-mark { width: 30px; height: 30px; }
+  .header-actions { gap: 5px; }
+  .language-control select { width: 104px; min-width: 104px; padding-left: 8px; }
+  .icon-button { width: 34px; }
   h1 { font-size: 52px; }
   .mission-lead { font-size: 18px; }
   .identity-state { display: none; }

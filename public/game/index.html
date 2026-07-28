@@ -16,13 +16,26 @@
   <header class="game-header">
     <a class="brand" href="/" aria-label="twin3 Community Mission">
       <img class="brand-mark" src="./twin3-logo.svg" alt="">
-      <div><strong>twin3</strong><span>Community Mission</span></div>
+      <div><strong>twin3</strong><span data-i18n="communityMission">Community Mission</span></div>
     </a>
     <div class="header-status">
       <span class="live-dot"></span>
       <span id="room-status">Mission lobby</span>
     </div>
     <div class="header-actions">
+      <label class="language-control">
+        <span class="sr-only">Language</span>
+        <select id="language-select" aria-label="Language">
+          <option value="en">English</option>
+          <option value="zh-TW">繁體中文</option>
+          <option value="zh-CN">简体中文</option>
+          <option value="ja">日本語</option>
+          <option value="ko">한국어</option>
+          <option value="es">Español</option>
+          <option value="pt-BR">Português</option>
+          <option value="vi">Tiếng Việt</option>
+        </select>
+      </label>
       <button class="icon-button muted" id="music-toggle" type="button" aria-label="Toggle music" title="Music"><span id="music-icon">♪</span></button>
       <button class="icon-button" id="sound-toggle" type="button" aria-label="Toggle sound effects" title="Sound effects"><span id="sound-icon">◖</span></button>
     </div>
@@ -32,22 +45,22 @@
     <section class="screen active lobby-screen" id="lobby-screen" aria-labelledby="mission-title">
       <div class="mission-copy">
         <div class="mode-row">
-          <span class="eyebrow">Hourly knowledge mission</span>
-          <span class="status-badge">Solo launch enabled</span>
+          <span class="eyebrow" data-i18n="hourlyMission">Hourly knowledge mission</span>
+          <span class="status-badge" data-i18n="soloLaunch">Solo launch enabled</span>
         </div>
-        <h1 id="mission-title">Enter the<br>Twin Matrix</h1>
-        <p class="mission-lead">Decode Web3, AI Agents, and the human layer behind twin3. Every answer unlocks a new dimension.</p>
+        <h1 id="mission-title" data-i18n="heroTitle">Enter the Twin Matrix</h1>
+        <p class="mission-lead" data-i18n="heroLead">Decode Web3, AI Agents, and the human layer behind twin3. Every answer unlocks a new dimension.</p>
 
         <div class="mission-meta">
-          <div><span>Mission</span><strong>10 questions</strong></div>
-          <div><span>Question pool</span><strong id="pool-count">30 unseen</strong></div>
-          <div><span>Reward preview</span><strong>Up to 50 $PoC</strong></div>
+          <div><span data-i18n="mission">Mission</span><strong data-i18n="tenQuestions">10 questions</strong></div>
+          <div><span data-i18n="questionPool">Question pool</span><strong id="pool-count">30 unseen</strong></div>
+          <div><span data-i18n="rewardPreview">Reward preview</span><strong data-i18n="upToReward">Up to 50 $PoC</strong></div>
         </div>
 
         <div class="identity-strip">
           <div class="identity-avatar" aria-hidden="true">P</div>
-          <div><span>Playing as</span><strong>Preview Pilot</strong></div>
-          <div class="identity-state"><span></span> Demo identity</div>
+          <div><span data-i18n="playingAs">Playing as</span><strong data-i18n="previewPilot">Preview Pilot</strong></div>
+          <div class="identity-state"><span></span> <b data-i18n="demoIdentity">Demo identity</b></div>
         </div>
       </div>
 
@@ -56,36 +69,36 @@
         <div class="orbit orbit-two"><i></i><i></i></div>
         <div class="core-glow"></div>
         <span class="core-label">256</span>
-        <span class="core-caption">human dimensions</span>
+        <span class="core-caption" data-i18n="humanDimensions">human dimensions</span>
       </div>
 
       <section class="mission-console" aria-labelledby="console-title">
         <div class="console-heading">
           <div>
-            <span class="eyebrow" id="console-title">Next launch window</span>
+            <span class="eyebrow" id="console-title" data-i18n="nextLaunch">Next launch window</span>
             <strong id="launch-clock">00:00</strong>
           </div>
-          <div class="journey-counter"><span>Journey</span><strong id="journey-count">0 / 30</strong></div>
+          <div class="journey-counter"><span data-i18n="journey">Journey</span><strong id="journey-count">0 / 30</strong></div>
         </div>
         <div class="journey-track" aria-label="Question journey progress"><span id="journey-progress"></span></div>
         <div class="mission-modes">
-          <article><span class="mode-icon">◎</span><div><strong>Signal Scan</strong><small>Choose the strongest answer</small></div></article>
-          <article><span class="mode-icon">◇</span><div><strong>Truth Gate</strong><small>Resolve a binary claim</small></div></article>
-          <article><span class="mode-icon">≋</span><div><strong>Sequence Lock</strong><small>Find the correct process</small></div></article>
+          <article><span class="mode-icon">◎</span><div><strong data-i18n="signalScan">Signal Scan</strong><small data-i18n="signalScanDesc">Choose the strongest answer</small></div></article>
+          <article><span class="mode-icon">◇</span><div><strong data-i18n="truthGate">Truth Gate</strong><small data-i18n="truthGateDesc">Resolve a binary claim</small></div></article>
+          <article><span class="mode-icon">≋</span><div><strong data-i18n="sequenceLock">Sequence Lock</strong><small data-i18n="sequenceLockDesc">Find the correct process</small></div></article>
         </div>
         <button id="ready-button" class="primary-button" type="button">
-          <span>Synchronize &amp; Enter</span>
-          <small>One player is enough to launch</small>
+          <span data-i18n="syncEnter">Synchronize &amp; Enter</span>
+          <small data-i18n="onePlayer">One player is enough to launch</small>
         </button>
-        <p class="prototype-note">Preview mode · no production $PoC is issued</p>
+        <p class="prototype-note" data-i18n="previewNoAward">Preview mode · no production $PoC is issued</p>
       </section>
     </section>
 
     <section class="screen countdown-screen" id="countdown-screen" aria-live="assertive">
-      <span class="eyebrow">Matrix synchronization</span>
+      <span class="eyebrow" data-i18n="matrixSync">Matrix synchronization</span>
       <div class="countdown-rings"><div class="countdown-value" id="countdown-value">3</div></div>
-      <h2 id="countdown-title">Aligning your identity</h2>
-      <p id="countdown-copy">Locking the mission room...</p>
+      <h2 id="countdown-title" data-i18n="aligningIdentity">Aligning your identity</h2>
+      <p id="countdown-copy" data-i18n="lockingRoom">Locking the mission room...</p>
       <div class="sync-steps"><span class="active"></span><span></span><span></span></div>
     </section>
 
@@ -95,7 +108,7 @@
           <span class="eyebrow" id="question-number">Question 1 of 10</span>
           <div class="progress-track"><span id="mission-progress"></span></div>
         </div>
-        <div class="streak-chip"><span>Streak</span><strong id="streak-value">0</strong></div>
+        <div class="streak-chip"><span data-i18n="streak">Streak</span><strong id="streak-value">0</strong></div>
         <div class="timer" id="timer" aria-label="Time remaining">
           <svg viewBox="0 0 44 44" aria-hidden="true">
             <circle class="timer-base" cx="22" cy="22" r="18"></circle>
@@ -107,7 +120,7 @@
 
       <div class="question-layout">
         <aside class="dimension-rail" aria-label="Unlocked dimensions">
-          <span>Dimensions</span>
+          <span data-i18n="dimensions">Dimensions</span>
           <div id="dimension-nodes"></div>
         </aside>
         <div class="question-stage" id="question-stage">
@@ -125,58 +138,60 @@
               <strong id="reveal-answer"></strong>
               <p id="reveal-explanation"></p>
             </div>
-            <button class="next-button" id="next-question" type="button">Next dimension <span>→</span></button>
+            <button class="next-button" id="next-question" type="button"><span class="next-copy">Next dimension</span> <span>→</span></button>
           </div>
         </div>
       </div>
 
       <div class="race-strip">
-        <div class="network-pulse"><span></span><strong id="network-count">148</strong> explorers in the network</div>
-        <div class="score-chip"><span>Mission reward</span><strong id="running-reward">0 $PoC</strong></div>
+        <div class="network-pulse"><span></span><strong id="network-count">148</strong> <b data-i18n="explorers">explorers in the network</b></div>
+        <div class="score-chip"><span data-i18n="missionReward">Mission reward</span><strong id="running-reward">0 $PoC</strong></div>
       </div>
     </section>
 
     <section class="screen result-screen" id="result-screen" aria-labelledby="result-title">
       <div class="result-halo" aria-hidden="true"></div>
-      <span class="eyebrow">Mission complete</span>
+      <span class="eyebrow" data-i18n="missionComplete">Mission complete</span>
       <div class="result-mark" id="result-mark">A</div>
-      <h2 id="result-title">Matrix synchronized</h2>
+      <h2 id="result-title" data-i18n="matrixSynchronized">Matrix synchronized</h2>
       <p class="result-subtitle" id="result-subtitle">Ten new dimensions are now part of your journey.</p>
 
       <div class="reward-card">
-        <div><span>Reward preview</span><strong id="final-reward">0 $PoC</strong></div>
-        <div><span>Accuracy</span><strong id="final-score">0 / 10</strong></div>
-        <div><span>Best streak</span><strong id="final-streak">0</strong></div>
-        <div><span>Journey</span><strong id="final-journey">10 / 30</strong></div>
+        <div><span data-i18n="rewardPreview">Reward preview</span><strong id="final-reward">0 $PoC</strong></div>
+        <div><span data-i18n="accuracy">Accuracy</span><strong id="final-score">0 / 10</strong></div>
+        <div><span data-i18n="bestStreak">Best streak</span><strong id="final-streak">0</strong></div>
+        <div><span data-i18n="journey">Journey</span><strong id="final-journey">10 / 30</strong></div>
       </div>
 
       <div class="result-tabs" role="tablist" aria-label="Mission results">
-        <button class="tab-button active" data-panel="leaderboard-panel" role="tab" type="button">Leaderboard</button>
-        <button class="tab-button" data-panel="review-panel" role="tab" type="button">Answer review</button>
+        <button class="tab-button active" data-panel="leaderboard-panel" role="tab" type="button" data-i18n="leaderboard">Leaderboard</button>
+        <button class="tab-button" data-panel="review-panel" role="tab" type="button" data-i18n="answerReview">Answer review</button>
       </div>
       <div class="result-panel" id="leaderboard-panel" role="tabpanel"></div>
       <div class="result-panel" id="review-panel" role="tabpanel" hidden></div>
 
       <div class="result-actions">
-        <button id="next-mission" class="primary-button compact" type="button">Enter next mission</button>
-        <button id="reset-preview" class="text-button" type="button">Reset preview journey</button>
+        <button id="next-mission" class="primary-button compact" type="button" data-i18n="nextMission">Enter next mission</button>
+        <button id="reset-preview" class="text-button" type="button" data-i18n="resetPreview">Reset preview journey</button>
       </div>
     </section>
 
     <section class="screen journey-screen" id="journey-screen">
       <div class="journey-complete-mark">30</div>
-      <span class="eyebrow">Journey complete</span>
-      <h2>You explored every available dimension.</h2>
-      <p>New missions will become available when reviewed questions are published.</p>
-      <button id="journey-results" class="secondary-button" type="button">View journey results</button>
+      <span class="eyebrow" data-i18n="journeyComplete">Journey complete</span>
+      <h2 data-i18n="journeyCompleteText">You explored every available dimension.</h2>
+      <p data-i18n="newQuestions">New missions will become available when reviewed questions are published.</p>
+      <button id="journey-results" class="secondary-button" type="button" data-i18n="viewResults">View journey results</button>
     </section>
   </main>
 
   <footer>
-    <span>Web gameplay preview</span>
-    <span>Production identity and ledger settlement are not enabled</span>
+    <span data-i18n="webPreview">Web gameplay preview</span>
+    <span data-i18n="productionDisabled">Production identity and ledger settlement are not enabled</span>
   </footer>
 
+  <script src="./i18n-ui.js"></script>
+  <script src="./i18n-questions.js"></script>
   <script src="./game.js"></script>
 </body>
 </html>

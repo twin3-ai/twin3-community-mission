@@ -185,7 +185,10 @@ const STORAGE_KEY = "twin3-community-mission-v2";
 const MISSION_SIZE = 10;
 const REWARD_PER_CORRECT = 5;
 const QUESTION_SECONDS = 20;
-const TYPE_LABELS = { choice: "Signal Scan", binary: "Truth Gate", sequence: "Sequence Lock" };
+const LOCALE_KEY = "twin3-community-mission-locale";
+const SUPPORTED_LOCALES = ["en", "zh-TW", "zh-CN", "ja", "ko", "es", "pt-BR", "vi"];
+const TYPE_KEYS = { choice: "signalScan", binary: "truthGate", sequence: "sequenceLock" };
+const INSTRUCTION_KEYS = { choice: "chooseAnswer", binary: "resolveClaim", sequence: "selectProcess" };
 const MEMORY_FALLBACK = {};
 
 const screens = [...document.querySelectorAll(".screen")];
@@ -211,6 +214,7 @@ const dimensionNodes = document.querySelector("#dimension-nodes");
 const roomStatus = document.querySelector("#room-status");
 const musicToggle = document.querySelector("#music-toggle");
 const soundToggle = document.querySelector("#sound-toggle");
+const languageSelect = document.querySelector("#language-select");
 
 let mission = [];
 let questionIndex = 0;
@@ -224,6 +228,97 @@ let musicEnabled = false;
 let soundEnabled = true;
 let audioContext = null;
 let ambientTimer = null;
+let currentLocale = resolveInitialLocale();
+
+function resolveInitialLocale() {
+  let saved = "";
+  try { saved = localStorage.getItem(LOCALE_KEY) || ""; } catch { /* Use browser language. */ }
+  if (SUPPORTED_LOCALES.includes(saved)) return saved;
+  const candidates = navigator.languages || [navigator.language || "en"];
+  for (const candidate of candidates) {
+    const normalized = String(candidate).toLowerCase();
+    if (normalized.startsWith("zh-tw") || normalized.startsWith("zh-hk") || normalized.includes("hant")) return "zh-TW";
+    if (normalized.startsWith("zh") || normalized.includes("hans")) return "zh-CN";
+    if (normalized.startsWith("pt")) return "pt-BR";
+    const match = SUPPORTED_LOCALES.find(locale => normalized === locale.toLowerCase() || normalized.startsWith(`${locale.toLowerCase()}-`));
+    if (match) return match;
+  }
+  return "en";
+}
+
+function translate(key, params = {}) {
+  const catalog = window.MISSION_UI_TRANSLATIONS || {};
+  const template = catalog[currentLocale]?.[key] || catalog.en?.[key] || key;
+  return Object.entries(params).reduce(
+    (value, [name, replacement]) => value.replaceAll(`{${name}}`, String(replacement)),
+    template
+  );
+}
+
+function localizedQuestion(item) {
+  if (!item || currentLocale === "en") return item;
+  const copy = window.MISSION_QUESTION_TRANSLATIONS?.[currentLocale]?.[item.id];
+  const valid = copy
+    && typeof copy.q === "string"
+    && typeof copy.e === "string"
+    && Array.isArray(copy.o)
+    && copy.o.length === item.options.length
+    && copy.o.every(option => typeof option === "string");
+  if (!valid) return item;
+  return { ...item, question: copy.q, options: copy.o, explanation: copy.e };
+}
+
+function sourceQuestion(id) {
+  return QUESTION_BANK.find(item => item.id === id);
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function applyStaticTranslations() {
+  document.documentElement.lang = currentLocale;
+  document.title = `twin3 ${translate("communityMission")}`;
+  document.querySelectorAll("[data-i18n]").forEach(element => {
+    element.textContent = translate(element.dataset.i18n);
+  });
+  languageSelect.setAttribute("aria-label", translate("language"));
+  musicToggle.setAttribute("aria-label", translate("music"));
+  musicToggle.title = translate("music");
+  soundToggle.setAttribute("aria-label", translate("soundEffects"));
+  soundToggle.title = translate("soundEffects");
+  document.querySelector("#timer").setAttribute("aria-label", translate("timeRemaining"));
+  document.querySelector(".dimension-rail").setAttribute("aria-label", translate("dimensions"));
+  languageSelect.value = currentLocale;
+  updateLobby();
+}
+
+function refreshVisibleLanguage() {
+  applyStaticTranslations();
+  const activeScreen = document.querySelector(".screen.active")?.id;
+  if (activeScreen === "countdown-screen") {
+    roomStatus.textContent = translate("matrixSync");
+  } else if (activeScreen === "quiz-screen" && mission[questionIndex]) {
+    applyCurrentQuestionCopy();
+    roomStatus.textContent = translate("mission");
+  } else if (activeScreen === "result-screen") {
+    const journey = loadJourney();
+    renderLeaderboard(journey);
+    renderReview();
+    const accuracy = mission.length ? correctAnswers / mission.length : 0;
+    document.querySelector("#result-subtitle").textContent = translate(accuracy >= 0.7 ? "successSubtitle" : "learningSubtitle");
+    roomStatus.textContent = translate("missionComplete");
+  } else if (activeScreen === "journey-screen") {
+    roomStatus.textContent = translate("journeyComplete");
+  } else {
+    roomStatus.textContent = translate("missionLobby");
+  }
+}
 
 function loadJourney() {
   try {
@@ -278,12 +373,12 @@ function showScreen(id) {
 function updateLobby() {
   const journey = loadJourney();
   const unseen = Math.max(0, QUESTION_BANK.length - journey.seen.length);
-  document.querySelector("#pool-count").textContent = `${unseen} unseen`;
+  document.querySelector("#pool-count").textContent = translate("unseen", { count: unseen });
   document.querySelector("#journey-count").textContent = `${journey.seen.length} / ${QUESTION_BANK.length}`;
   document.querySelector("#journey-progress").style.width = `${(journey.seen.length / QUESTION_BANK.length) * 100}%`;
   readyButton.disabled = unseen === 0;
-  readyButton.querySelector("span").textContent = unseen === 0 ? "Journey complete" : "Synchronize & Enter";
-  readyButton.querySelector("small").textContent = unseen === 0 ? "New reviewed questions unlock future missions" : "One player is enough to launch";
+  readyButton.querySelector("span").textContent = translate(unseen === 0 ? "complete" : "syncEnter");
+  readyButton.querySelector("small").textContent = translate(unseen === 0 ? "futureUnlock" : "onePlayer");
 }
 
 function updateLaunchClock() {
@@ -355,7 +450,7 @@ function startCountdown() {
     return;
   }
   showScreen("countdown-screen");
-  roomStatus.textContent = "Synchronizing";
+  roomStatus.textContent = translate("matrixSync");
   let value = 3;
   const countdownValue = document.querySelector("#countdown-value");
   const countdownCopy = document.querySelector("#countdown-copy");
@@ -367,7 +462,7 @@ function startCountdown() {
     value -= 1;
     if (value > 0) {
       countdownValue.textContent = value;
-      countdownCopy.textContent = value === 2 ? "Connecting your question journey..." : "Opening unseen dimensions...";
+      countdownCopy.textContent = translate(value === 2 ? "connectingJourney" : "openingMission");
       syncSteps[3 - value].classList.add("active");
       tone(300 + (3 - value) * 100, 0.14, "triangle", 0.05);
       countdownValue.animate([{ transform: "scale(.7)", opacity: 0 }, { transform: "scale(1)", opacity: 1 }], { duration: 360 });
@@ -389,7 +484,7 @@ function beginMission() {
   selectedAnswers = [];
   dimensionNodes.innerHTML = mission.map((_, index) => `<span title="Dimension ${index + 1}"></span>`).join("");
   showScreen("quiz-screen");
-  roomStatus.textContent = "Mission live";
+  roomStatus.textContent = translate("mission");
   renderQuestion();
 }
 
@@ -398,30 +493,46 @@ function renderQuestion() {
   const item = mission[questionIndex];
   revealPanel.hidden = true;
   document.querySelector("#question-stage").className = `question-stage type-${item.type}`;
-  questionNumber.textContent = `Question ${questionIndex + 1} of ${mission.length}`;
-  questionText.textContent = item.question;
-  categoryPill.textContent = item.domain;
-  interactionLabel.textContent = TYPE_LABELS[item.type];
-  questionInstruction.textContent = item.type === "binary"
-    ? "Resolve the claim."
-    : item.type === "sequence"
-      ? "Select the correctly ordered process."
-      : "Choose the strongest answer.";
   missionProgress.style.width = `${((questionIndex + 1) / mission.length) * 100}%`;
   runningReward.textContent = `${correctAnswers * REWARD_PER_CORRECT} $PoC`;
   streakValue.textContent = currentStreak;
 
   const letters = item.type === "binary" ? ["T", "F"] : ["A", "B", "C", "D"];
-  answerGrid.innerHTML = item.options.map((option, index) => `
+  answerGrid.innerHTML = item.options.map((_, index) => `
     <button class="answer-button" data-index="${index}" type="button">
       <span class="letter">${letters[index]}</span>
-      <span class="answer-copy">${option}</span>
+      <span class="answer-copy"></span>
     </button>
   `).join("");
   answerGrid.querySelectorAll(".answer-button").forEach(button => {
     button.addEventListener("click", () => selectAnswer(Number(button.dataset.index)));
   });
+  applyCurrentQuestionCopy();
   startTimer();
+}
+
+function applyCurrentQuestionCopy() {
+  const original = mission[questionIndex];
+  if (!original) return;
+  const item = localizedQuestion(original);
+  questionNumber.textContent = translate("questionOf", { current: questionIndex + 1, total: mission.length });
+  questionText.textContent = item.question;
+  categoryPill.textContent = item.domain;
+  interactionLabel.textContent = translate(TYPE_KEYS[item.type]);
+  questionInstruction.textContent = translate(INSTRUCTION_KEYS[item.type]);
+  answerGrid.querySelectorAll(".answer-copy").forEach((copy, index) => {
+    copy.textContent = item.options[index] || "";
+  });
+
+  if (!revealPanel.hidden) {
+    const answer = selectedAnswers.at(-1);
+    revealLabel.textContent = translate(answer?.isCorrect ? "dimensionUnlocked" : answer?.choice < 0 ? "timeExpired" : "signalCorrected");
+    revealAnswer.textContent = item.options[item.correct];
+    revealExplanation.textContent = item.explanation;
+    nextQuestionButton.querySelector(".next-copy").textContent = translate(
+      questionIndex === mission.length - 1 ? "revealResults" : "nextDimension"
+    );
+  }
 }
 
 function startTimer() {
@@ -446,11 +557,12 @@ function updateTimer() {
 function selectAnswer(choice) {
   clearInterval(timerId);
   const item = mission[questionIndex];
+  const copy = localizedQuestion(item);
   const buttons = [...answerGrid.querySelectorAll(".answer-button")];
   if (buttons.every(button => button.disabled)) return;
   buttons.forEach(button => { button.disabled = true; });
   const isCorrect = choice === item.correct;
-  selectedAnswers.push({ item, choice, isCorrect });
+  selectedAnswers.push({ id: item.id, choice, isCorrect });
 
   if (choice >= 0) buttons[choice].classList.add(isCorrect ? "correct" : "wrong");
   buttons[item.correct].classList.add("correct");
@@ -470,10 +582,12 @@ function selectAnswer(choice) {
   revealPanel.hidden = false;
   revealPanel.classList.toggle("negative", !isCorrect);
   revealSymbol.textContent = isCorrect ? "✓" : "!";
-  revealLabel.textContent = isCorrect ? "Dimension unlocked" : choice < 0 ? "Time expired" : "Signal corrected";
-  revealAnswer.textContent = item.options[item.correct];
-  revealExplanation.textContent = item.explanation;
-  nextQuestionButton.innerHTML = questionIndex === mission.length - 1 ? "Reveal results <span>→</span>" : "Next dimension <span>→</span>";
+  revealLabel.textContent = translate(isCorrect ? "dimensionUnlocked" : choice < 0 ? "timeExpired" : "signalCorrected");
+  revealAnswer.textContent = copy.options[item.correct];
+  revealExplanation.textContent = copy.explanation;
+  nextQuestionButton.querySelector(".next-copy").textContent = translate(
+    questionIndex === mission.length - 1 ? "revealResults" : "nextDimension"
+  );
   nextQuestionButton.focus();
 }
 
@@ -508,14 +622,12 @@ function finishMission() {
   document.querySelector("#final-score").textContent = `${correctAnswers} / ${mission.length}`;
   document.querySelector("#final-streak").textContent = bestStreak;
   document.querySelector("#final-journey").textContent = `${journey.seen.length} / ${QUESTION_BANK.length}`;
-  document.querySelector("#result-subtitle").textContent = accuracy >= 0.7
-    ? "Your signals held steady. Ten dimensions have joined your journey."
-    : "The Matrix revealed where your next learning edge begins.";
+  document.querySelector("#result-subtitle").textContent = translate(accuracy >= 0.7 ? "successSubtitle" : "learningSubtitle");
   renderLeaderboard(journey);
   renderReview();
   document.querySelector("#next-mission").hidden = journey.seen.length >= QUESTION_BANK.length;
   showScreen("result-screen");
-  roomStatus.textContent = "Mission complete";
+  roomStatus.textContent = translate("missionComplete");
   playVictory();
 }
 
@@ -525,31 +637,33 @@ function renderLeaderboard(journey) {
     { name: "Nova", correct: 10, streak: 8 },
     { name: "Maya", correct: 9, streak: 6 },
     { name: "Leo", correct: 8, streak: 5 },
-    { name: "Preview Pilot", correct: current.correct, streak: current.bestStreak, you: true },
+    { name: translate("previewPilot"), correct: current.correct, streak: current.bestStreak, you: true },
     { name: "Kai", correct: 6, streak: 4 }
   ].sort((a, b) => b.correct - a.correct || b.streak - a.streak);
   document.querySelector("#leaderboard-panel").innerHTML = `
-    <div class="leaderboard-heading"><span>Mission room</span><small>Preview room results</small></div>
+    <div class="leaderboard-heading"><span>${escapeHtml(translate("mission"))}</span><small>${escapeHtml(translate("previewRoom"))}</small></div>
     <div class="leaderboard-list">${peers.map((player, index) => `
       <div class="leaderboard-row ${player.you ? "you" : ""}">
         <span class="rank-number">${index + 1}</span>
-        <span class="leader-avatar">${player.name.charAt(0)}</span>
-        <strong>${player.name}${player.you ? " · You" : ""}</strong>
+        <span class="leader-avatar">${escapeHtml(player.name.charAt(0))}</span>
+        <strong>${escapeHtml(player.name)}${player.you ? ` · ${escapeHtml(translate("you"))}` : ""}</strong>
         <span>${player.correct} / 10</span>
         <b>${player.correct * REWARD_PER_CORRECT} $PoC</b>
       </div>
     `).join("")}</div>
-    <p class="panel-note">Other names are simulated preview players. Production rankings use verified Discord identities only.</p>
+    <p class="panel-note">${escapeHtml(translate("previewPlayers"))}</p>
   `;
 }
 
 function renderReview() {
   document.querySelector("#review-panel").innerHTML = selectedAnswers.map((answer, index) => {
-    const selected = answer.choice >= 0 ? answer.item.options[answer.choice] : "No answer";
+    const item = localizedQuestion(sourceQuestion(answer.id));
+    if (!item) return "";
+    const selected = answer.choice >= 0 ? item.options[answer.choice] : translate("noAnswer");
     return `
       <article class="review-row ${answer.isCorrect ? "correct" : ""}">
         <span>${String(index + 1).padStart(2, "0")}</span>
-        <div><strong>${answer.item.question}</strong><p>Your answer: ${selected}</p><small>${answer.item.explanation}</small></div>
+        <div><strong>${escapeHtml(item.question)}</strong><p>${escapeHtml(translate("yourAnswer"))}: ${escapeHtml(selected)}</p><small>${escapeHtml(item.explanation)}</small></div>
       </article>
     `;
   }).join("");
@@ -559,7 +673,7 @@ function resetToLobby() {
   clearInterval(timerId);
   mission = [];
   showScreen("lobby-screen");
-  roomStatus.textContent = "Mission lobby";
+  roomStatus.textContent = translate("missionLobby");
   updateLobby();
   startAmbient();
 }
@@ -602,6 +716,12 @@ soundToggle.addEventListener("click", () => {
   soundToggle.classList.toggle("muted", !soundEnabled);
   document.querySelector("#sound-icon").textContent = soundEnabled ? "◖" : "×";
   if (soundEnabled) tone(520, 0.12, "sine", 0.04);
+});
+
+languageSelect.addEventListener("change", () => {
+  currentLocale = SUPPORTED_LOCALES.includes(languageSelect.value) ? languageSelect.value : "en";
+  try { localStorage.setItem(LOCALE_KEY, currentLocale); } catch { /* Preference remains in memory. */ }
+  refreshVisibleLanguage();
 });
 
 function setupNetworkPulse() {
@@ -674,7 +794,8 @@ function setupMatrixField() {
   draw();
 }
 
-updateLobby();
+applyStaticTranslations();
+roomStatus.textContent = translate("missionLobby");
 updateLaunchClock();
 setInterval(updateLaunchClock, 1000);
 setupNetworkPulse();
