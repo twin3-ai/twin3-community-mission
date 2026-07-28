@@ -58,3 +58,4 @@ as a full-viewport experience and is packaged for Codex Sites with vinext.
 ## Product specifications
 
 - [twin3 $PoC Soulbound ERC-20 功能規劃](docs/POC_SOULBOUND_TOKEN_FUNCTION_SPEC_ZH.md)
+- [twin3 Community Mission 產品規劃書](docs/COMMUNITY_MISSION_PRODUCT_PLAN_ZH.md)
