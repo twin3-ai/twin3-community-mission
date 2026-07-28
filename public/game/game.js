@@ -185,6 +185,9 @@ const STORAGE_KEY = "twin3-community-mission-v2";
 const MISSION_SIZE = 10;
 const REWARD_PER_CORRECT = 5;
 const QUESTION_SECONDS = 20;
+const MUSIC_BPM = 126;
+const MUSIC_LOOKAHEAD_MS = 25;
+const MUSIC_SCHEDULE_AHEAD = 0.12;
 const LOCALE_KEY = "twin3-community-mission-locale";
 const SUPPORTED_LOCALES = ["en", "zh-TW", "zh-CN", "ja", "ko", "es", "pt-BR", "vi"];
 const TYPE_KEYS = { choice: "signalScan", binary: "truthGate", sequence: "sequenceLock" };
@@ -224,10 +227,15 @@ let bestStreak = 0;
 let selectedAnswers = [];
 let timerId = null;
 let timeLeft = QUESTION_SECONDS;
-let musicEnabled = false;
+let musicEnabled = true;
 let soundEnabled = true;
 let audioContext = null;
-let ambientTimer = null;
+let musicScheduler = null;
+let musicMaster = null;
+let musicStep = 0;
+let nextMusicNoteAt = 0;
+let noiseBuffer = null;
+const visualBeatTimers = new Set();
 let currentLocale = resolveInitialLocale();
 
 function resolveInitialLocale() {
@@ -398,12 +406,12 @@ function getAudioContext() {
 }
 
 function tone(frequency, duration = 0.12, type = "sine", volume = 0.04, delay = 0) {
-  if (!soundEnabled && type !== "ambient") return;
+  if (!soundEnabled) return;
   const context = getAudioContext();
   const oscillator = context.createOscillator();
   const gain = context.createGain();
   const start = context.currentTime + delay;
-  oscillator.type = type === "ambient" ? "sine" : type;
+  oscillator.type = type;
   oscillator.frequency.setValueAtTime(frequency, start);
   gain.gain.setValueAtTime(0.0001, start);
   gain.gain.exponentialRampToValueAtTime(volume, start + 0.02);
@@ -416,31 +424,223 @@ function tone(frequency, duration = 0.12, type = "sine", volume = 0.04, delay = 
 function playCorrect() {
   tone(440, 0.18, "sine", 0.055);
   tone(660, 0.28, "sine", 0.055, 0.1);
+  pulseInterface("answer-burst", 380);
 }
 
 function playWrong() {
   tone(170, 0.2, "sawtooth", 0.025);
+  pulseInterface("signal-break", 300);
 }
 
 function playVictory() {
   [392, 523.25, 659.25, 783.99].forEach((frequency, index) => tone(frequency, 0.5, "triangle", 0.05, index * 0.12));
+  pulseInterface("victory-flare", 760);
+}
+
+function pulseInterface(className, duration) {
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  document.body.classList.remove(className);
+  requestAnimationFrame(() => document.body.classList.add(className));
+  const timer = setTimeout(() => {
+    document.body.classList.remove(className);
+    visualBeatTimers.delete(timer);
+  }, duration);
+  visualBeatTimers.add(timer);
+}
+
+function createMusicBus(context) {
+  const master = context.createGain();
+  const compressor = context.createDynamicsCompressor();
+  master.gain.setValueAtTime(0.0001, context.currentTime);
+  master.gain.exponentialRampToValueAtTime(0.2, context.currentTime + 0.08);
+  compressor.threshold.setValueAtTime(-18, context.currentTime);
+  compressor.knee.setValueAtTime(14, context.currentTime);
+  compressor.ratio.setValueAtTime(7, context.currentTime);
+  compressor.attack.setValueAtTime(0.004, context.currentTime);
+  compressor.release.setValueAtTime(0.18, context.currentTime);
+  master.connect(compressor).connect(context.destination);
+  return master;
+}
+
+function getNoiseBuffer(context) {
+  if (noiseBuffer && noiseBuffer.sampleRate === context.sampleRate) return noiseBuffer;
+  noiseBuffer = context.createBuffer(1, context.sampleRate, context.sampleRate);
+  const samples = noiseBuffer.getChannelData(0);
+  for (let index = 0; index < samples.length; index += 1) {
+    samples[index] = Math.random() * 2 - 1;
+  }
+  return noiseBuffer;
+}
+
+function scheduleKick(context, destination, at, strength = 1) {
+  const oscillator = context.createOscillator();
+  const gain = context.createGain();
+  oscillator.type = "sine";
+  oscillator.frequency.setValueAtTime(150, at);
+  oscillator.frequency.exponentialRampToValueAtTime(46, at + 0.11);
+  gain.gain.setValueAtTime(0.0001, at);
+  gain.gain.exponentialRampToValueAtTime(0.48 * strength, at + 0.004);
+  gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.2);
+  oscillator.connect(gain).connect(destination);
+  oscillator.start(at);
+  oscillator.stop(at + 0.22);
+}
+
+function scheduleSnare(context, destination, at) {
+  const noise = context.createBufferSource();
+  const noiseFilter = context.createBiquadFilter();
+  const noiseGain = context.createGain();
+  const body = context.createOscillator();
+  const bodyGain = context.createGain();
+  noise.buffer = getNoiseBuffer(context);
+  noiseFilter.type = "highpass";
+  noiseFilter.frequency.setValueAtTime(1400, at);
+  noiseGain.gain.setValueAtTime(0.22, at);
+  noiseGain.gain.exponentialRampToValueAtTime(0.0001, at + 0.13);
+  body.type = "triangle";
+  body.frequency.setValueAtTime(185, at);
+  bodyGain.gain.setValueAtTime(0.09, at);
+  bodyGain.gain.exponentialRampToValueAtTime(0.0001, at + 0.1);
+  noise.connect(noiseFilter).connect(noiseGain).connect(destination);
+  body.connect(bodyGain).connect(destination);
+  noise.start(at);
+  noise.stop(at + 0.14);
+  body.start(at);
+  body.stop(at + 0.11);
+}
+
+function scheduleHat(context, destination, at, open = false) {
+  const noise = context.createBufferSource();
+  const filter = context.createBiquadFilter();
+  const gain = context.createGain();
+  const duration = open ? 0.15 : 0.045;
+  noise.buffer = getNoiseBuffer(context);
+  filter.type = "highpass";
+  filter.frequency.setValueAtTime(6000, at);
+  gain.gain.setValueAtTime(open ? 0.075 : 0.045, at);
+  gain.gain.exponentialRampToValueAtTime(0.0001, at + duration);
+  noise.connect(filter).connect(gain).connect(destination);
+  noise.start(at);
+  noise.stop(at + duration + 0.01);
+}
+
+function scheduleBass(context, destination, at, frequency, duration = 0.18) {
+  const oscillator = context.createOscillator();
+  const filter = context.createBiquadFilter();
+  const gain = context.createGain();
+  oscillator.type = "sawtooth";
+  oscillator.frequency.setValueAtTime(frequency, at);
+  filter.type = "lowpass";
+  filter.frequency.setValueAtTime(520, at);
+  filter.Q.setValueAtTime(5, at);
+  gain.gain.setValueAtTime(0.0001, at);
+  gain.gain.exponentialRampToValueAtTime(0.085, at + 0.008);
+  gain.gain.exponentialRampToValueAtTime(0.0001, at + duration);
+  oscillator.connect(filter).connect(gain).connect(destination);
+  oscillator.start(at);
+  oscillator.stop(at + duration + 0.02);
+}
+
+function schedulePowerChord(context, destination, at, root) {
+  const filter = context.createBiquadFilter();
+  const gain = context.createGain();
+  filter.type = "lowpass";
+  filter.frequency.setValueAtTime(1700, at);
+  filter.frequency.exponentialRampToValueAtTime(620, at + 0.34);
+  gain.gain.setValueAtTime(0.0001, at);
+  gain.gain.exponentialRampToValueAtTime(0.035, at + 0.012);
+  gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.42);
+  filter.connect(gain).connect(destination);
+  [1, 1.4983, 2].forEach((ratio, index) => {
+    const oscillator = context.createOscillator();
+    oscillator.type = index === 1 ? "square" : "sawtooth";
+    oscillator.frequency.setValueAtTime(root * ratio, at);
+    oscillator.detune.setValueAtTime(index * 4 - 4, at);
+    oscillator.connect(filter);
+    oscillator.start(at);
+    oscillator.stop(at + 0.44);
+  });
+}
+
+function schedulePluck(context, destination, at, frequency) {
+  const oscillator = context.createOscillator();
+  const gain = context.createGain();
+  oscillator.type = "triangle";
+  oscillator.frequency.setValueAtTime(frequency, at);
+  gain.gain.setValueAtTime(0.045, at);
+  gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.09);
+  oscillator.connect(gain).connect(destination);
+  oscillator.start(at);
+  oscillator.stop(at + 0.1);
+}
+
+function scheduleVisualBeat(context, at, accent) {
+  const delay = Math.max(0, (at - context.currentTime) * 1000);
+  const timer = setTimeout(() => {
+    visualBeatTimers.delete(timer);
+    pulseInterface(accent ? "beat-accent" : "beat-pulse", accent ? 330 : 210);
+  }, delay);
+  visualBeatTimers.add(timer);
+}
+
+function scheduleMusicStep(context, step, at) {
+  if (!musicMaster) return;
+  const kickSteps = [0, 4, 8, 11, 12];
+  const bassPattern = [55, 55, 65.41, 55, 73.42, 65.41, 55, 49];
+  const bassSteps = [0, 3, 6, 8, 11, 14];
+  if (kickSteps.includes(step)) scheduleKick(context, musicMaster, at, step === 0 ? 1.12 : 1);
+  if (step === 4 || step === 12) scheduleSnare(context, musicMaster, at);
+  if (step % 2 === 0) scheduleHat(context, musicMaster, at, step === 14);
+  if (bassSteps.includes(step)) {
+    const note = bassPattern[(step + Math.floor(step / 4)) % bassPattern.length];
+    scheduleBass(context, musicMaster, at, note, step === 11 ? 0.11 : 0.2);
+  }
+  if (step === 0) schedulePowerChord(context, musicMaster, at, 110);
+  if (step === 8) schedulePowerChord(context, musicMaster, at, 98);
+  if ([2, 7, 10, 15].includes(step)) {
+    const plucks = { 2: 440, 7: 523.25, 10: 392, 15: 659.25 };
+    schedulePluck(context, musicMaster, at, plucks[step]);
+  }
+  if (step % 4 === 0) scheduleVisualBeat(context, at, step === 0 || step === 8);
+}
+
+function runMusicScheduler() {
+  if (!musicEnabled || !audioContext || !musicMaster) return;
+  const sixteenth = 60 / MUSIC_BPM / 4;
+  while (nextMusicNoteAt < audioContext.currentTime + MUSIC_SCHEDULE_AHEAD) {
+    scheduleMusicStep(audioContext, musicStep, nextMusicNoteAt);
+    nextMusicNoteAt += sixteenth;
+    musicStep = (musicStep + 1) % 16;
+  }
 }
 
 function startAmbient() {
   stopAmbient();
-  if (!musicEnabled) return;
-  const notes = [110, 146.83, 164.81, 220, 164.81, 146.83];
-  let step = 0;
-  tone(notes[step], 1.8, "ambient", 0.014);
-  ambientTimer = setInterval(() => {
-    step = (step + 1) % notes.length;
-    tone(notes[step], 1.8, "ambient", 0.014);
-  }, 1700);
+  if (!musicEnabled || document.hidden) return;
+  const context = getAudioContext();
+  musicMaster = createMusicBus(context);
+  musicStep = 0;
+  nextMusicNoteAt = context.currentTime + 0.06;
+  document.body.classList.add("music-live");
+  runMusicScheduler();
+  musicScheduler = setInterval(runMusicScheduler, MUSIC_LOOKAHEAD_MS);
 }
 
 function stopAmbient() {
-  clearInterval(ambientTimer);
-  ambientTimer = null;
+  clearInterval(musicScheduler);
+  musicScheduler = null;
+  document.body.classList.remove("music-live", "beat-pulse", "beat-accent");
+  visualBeatTimers.forEach(timer => clearTimeout(timer));
+  visualBeatTimers.clear();
+  if (musicMaster && audioContext) {
+    const bus = musicMaster;
+    const now = audioContext.currentTime;
+    bus.gain.cancelScheduledValues(now);
+    bus.gain.setValueAtTime(Math.max(bus.gain.value, 0.0001), now);
+    bus.gain.exponentialRampToValueAtTime(0.0001, now + 0.08);
+    setTimeout(() => bus.disconnect(), 120);
+  }
+  musicMaster = null;
 }
 
 function startCountdown() {
@@ -680,6 +880,7 @@ function resetToLobby() {
 
 readyButton.addEventListener("click", () => {
   getAudioContext();
+  if (musicEnabled && !musicScheduler) startAmbient();
   tone(330, 0.16, "sine", 0.05);
   tone(494, 0.24, "sine", 0.05, 0.1);
   startCountdown();
@@ -716,6 +917,14 @@ soundToggle.addEventListener("click", () => {
   soundToggle.classList.toggle("muted", !soundEnabled);
   document.querySelector("#sound-icon").textContent = soundEnabled ? "◖" : "×";
   if (soundEnabled) tone(520, 0.12, "sine", 0.04);
+});
+
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    stopAmbient();
+  } else if (musicEnabled && audioContext) {
+    startAmbient();
+  }
 });
 
 languageSelect.addEventListener("change", () => {

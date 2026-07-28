@@ -48,6 +48,88 @@ button { color: inherit; }
   pointer-events: none;
 }
 
+.rhythm-field {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.rhythm-ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(72vw, 820px);
+  aspect-ratio: 1;
+  border: 2px solid rgba(209, 91, 55, .18);
+  border-radius: 50%;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(.72);
+}
+.rhythm-ring-b {
+  width: min(92vw, 1080px);
+  border-color: rgba(50, 87, 61, .15);
+}
+.rhythm-scan {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 18%;
+  height: 2px;
+  background: rgba(212, 155, 54, .42);
+  opacity: 0;
+  transform: translateY(-18vh);
+}
+.rhythm-bars {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  width: min(540px, 74vw);
+  height: 52px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 7px;
+  opacity: .3;
+  transform: translateX(-50%);
+}
+.rhythm-bars i {
+  width: 8px;
+  height: calc(8px + (var(--bar, 1) * 4px));
+  background: var(--forest);
+  transform: scaleY(.45);
+  transform-origin: bottom;
+  transition: transform 90ms linear, background-color 90ms linear, opacity 90ms linear;
+}
+.rhythm-bars i:nth-child(3n + 1) { --bar: 3; background: var(--coral); }
+.rhythm-bars i:nth-child(3n + 2) { --bar: 6; background: var(--gold); }
+.rhythm-bars i:nth-child(3n) { --bar: 9; }
+body.music-live .rhythm-bars { opacity: .66; }
+body.beat-pulse .rhythm-ring-a {
+  opacity: .44;
+  transform: translate(-50%, -50%) scale(1);
+  transition: transform 170ms ease-out, opacity 230ms ease-out;
+}
+body.beat-accent .rhythm-ring-b {
+  opacity: .34;
+  transform: translate(-50%, -50%) scale(1.03);
+  transition: transform 250ms ease-out, opacity 340ms ease-out;
+}
+body.beat-pulse .rhythm-bars i { transform: scaleY(calc(.65 + var(--bar, 1) * .09)); }
+body.beat-accent .rhythm-bars i { background: var(--coral); }
+body.music-live .rhythm-scan {
+  animation: rhythmScan 4s linear infinite;
+}
+body.answer-burst .question-stage {
+  animation: answerBurst 360ms cubic-bezier(.2,.8,.2,1);
+}
+body.signal-break .question-stage {
+  animation: signalBreak 280ms ease-out;
+}
+body.victory-flare .result-mark {
+  animation: victoryFlare 700ms cubic-bezier(.2,.8,.2,1);
+}
+
 .game-header, main, footer { position: relative; z-index: 1; }
 .game-header {
   height: 70px;
@@ -462,6 +544,22 @@ footer {
 @keyframes reveal { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes pulse { 50% { transform: scale(1.035); opacity: .78; } }
+@keyframes rhythmScan {
+  0% { opacity: 0; transform: translateY(-18vh); }
+  12% { opacity: .36; }
+  88% { opacity: .16; }
+  100% { opacity: 0; transform: translateY(78vh); }
+}
+@keyframes answerBurst {
+  35% { transform: scale(1.012); box-shadow: 0 0 0 3px rgba(76, 124, 89, .2), var(--shadow); }
+}
+@keyframes signalBreak {
+  35% { transform: translateX(-4px); }
+  70% { transform: translateX(3px); }
+}
+@keyframes victoryFlare {
+  35% { transform: scale(1.14) rotate(4deg); box-shadow: 0 0 0 18px rgba(212, 155, 54, .18); }
+}
 
 @media (max-width: 820px) {
   .game-header { grid-template-columns: 1fr auto; padding: 0 18px; }
@@ -518,4 +616,5 @@ footer {
     animation-iteration-count: 1 !important;
     transition-duration: .01ms !important;
   }
+  .rhythm-field { display: none; }
 }

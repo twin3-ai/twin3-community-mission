@@ -48,6 +48,25 @@ test("ships the ten-question, no-repeat mission contract", async () => {
   assert.match(game, /QUESTION_BANK\.length - journey\.seen\.length/);
 });
 
+test("ships an original beat-driven soundtrack and reduced-motion visual layer", async () => {
+  const [html, game, styles] = await Promise.all([
+    readFile(new URL("../public/game/index.html", import.meta.url), "utf8"),
+    readFile(new URL("../public/game/game.js", import.meta.url), "utf8"),
+    readFile(new URL("../public/game/styles.css", import.meta.url), "utf8"),
+  ]);
+
+  assert.match(html, /class="rhythm-field"/);
+  assert.match(game, /const MUSIC_BPM = 126/);
+  assert.match(game, /function scheduleKick/);
+  assert.match(game, /function scheduleSnare/);
+  assert.match(game, /function scheduleBass/);
+  assert.match(game, /function schedulePowerChord/);
+  assert.doesNotMatch(game, /setInterval\(\(\) => \{[\s\S]*1700\)/);
+  assert.match(styles, /body\.beat-pulse/);
+  assert.match(styles, /@media \(prefers-reduced-motion: reduce\)/);
+  assert.match(styles, /\.rhythm-field \{ display: none; \}/);
+});
+
 function readBrowserAsset(source, globalName) {
   const context = { window: {} };
   vm.runInNewContext(source, context);

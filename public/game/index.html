@@ -12,6 +12,14 @@
 </head>
 <body>
   <canvas id="matrix-field" aria-hidden="true"></canvas>
+  <div class="rhythm-field" aria-hidden="true">
+    <span class="rhythm-ring rhythm-ring-a"></span>
+    <span class="rhythm-ring rhythm-ring-b"></span>
+    <span class="rhythm-scan"></span>
+    <div class="rhythm-bars">
+      <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+    </div>
+  </div>
 
   <header class="game-header">
     <a class="brand" href="/" aria-label="twin3 Community Mission">
@@ -36,7 +44,7 @@
           <option value="vi">Tiếng Việt</option>
         </select>
       </label>
-      <button class="icon-button muted" id="music-toggle" type="button" aria-label="Toggle music" title="Music"><span id="music-icon">♪</span></button>
+      <button class="icon-button" id="music-toggle" type="button" aria-label="Toggle music" title="Music"><span id="music-icon">♫</span></button>
       <button class="icon-button" id="sound-toggle" type="button" aria-label="Toggle sound effects" title="Sound effects"><span id="sound-icon">◖</span></button>
     </div>
   </header>
