@@ -3,89 +3,99 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f7f1">
   <title>twin3 Community Mission</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
   <canvas id="matrix-field" aria-hidden="true"></canvas>
 
   <header class="game-header">
-    <div class="brand">
-      <img class="brand-mark" src="./twin3-logo.svg" alt="twin3">
-      <div>
-        <strong>twin3</strong>
-        <span>Community Mission</span>
-      </div>
-    </div>
+    <a class="brand" href="/" aria-label="twin3 Community Mission">
+      <img class="brand-mark" src="./twin3-logo.svg" alt="">
+      <div><strong>twin3</strong><span>Community Mission</span></div>
+    </a>
     <div class="header-status">
       <span class="live-dot"></span>
       <span id="room-status">Mission lobby</span>
     </div>
-    <div class="audio-controls">
-      <button class="icon-button" id="music-toggle" type="button" aria-label="Toggle music" title="Music">
-        <span id="music-icon">♪</span>
-      </button>
-      <button class="icon-button" id="sound-toggle" type="button" aria-label="Toggle sound effects" title="Sound effects">
-        <span id="sound-icon">◖</span>
-      </button>
+    <div class="header-actions">
+      <button class="icon-button muted" id="music-toggle" type="button" aria-label="Toggle music" title="Music"><span id="music-icon">♪</span></button>
+      <button class="icon-button" id="sound-toggle" type="button" aria-label="Toggle sound effects" title="Sound effects"><span id="sound-icon">◖</span></button>
     </div>
   </header>
 
   <main id="game-shell">
-    <section class="screen active" id="lobby-screen" aria-labelledby="mission-title">
+    <section class="screen active lobby-screen" id="lobby-screen" aria-labelledby="mission-title">
       <div class="mission-copy">
-        <p class="eyebrow">Live identity challenge</p>
-        <h1 id="mission-title">Enter the Twin Matrix</h1>
-        <p class="mission-lead">Synchronize your identity. Answer five questions and race the Matrix.</p>
+        <div class="mode-row">
+          <span class="eyebrow">Hourly knowledge mission</span>
+          <span class="status-badge">Solo launch enabled</span>
+        </div>
+        <h1 id="mission-title">Enter the<br>Twin Matrix</h1>
+        <p class="mission-lead">Decode Web3, AI Agents, and the human layer behind twin3. Every answer unlocks a new dimension.</p>
 
         <div class="mission-meta">
-          <div><span>Questions</span><strong>5</strong></div>
-          <div><span>Potential reward</span><strong>25 $PoC</strong></div>
-          <div><span>Answer window</span><strong>20 sec</strong></div>
+          <div><span>Mission</span><strong>10 questions</strong></div>
+          <div><span>Question pool</span><strong id="pool-count">30 unseen</strong></div>
+          <div><span>Reward preview</span><strong>Up to 50 $PoC</strong></div>
+        </div>
+
+        <div class="identity-strip">
+          <div class="identity-avatar" aria-hidden="true">P</div>
+          <div><span>Playing as</span><strong>Preview Pilot</strong></div>
+          <div class="identity-state"><span></span> Demo identity</div>
         </div>
       </div>
 
       <div class="matrix-core" aria-hidden="true">
-        <div class="orbit orbit-one"></div>
-        <div class="orbit orbit-two"></div>
+        <div class="orbit orbit-one"><i></i><i></i><i></i></div>
+        <div class="orbit orbit-two"><i></i><i></i></div>
         <div class="core-glow"></div>
         <span class="core-label">256</span>
-        <span class="core-caption">dimensions</span>
+        <span class="core-caption">human dimensions</span>
       </div>
 
-      <section class="players-panel" aria-labelledby="players-title">
-        <div class="panel-heading">
+      <section class="mission-console" aria-labelledby="console-title">
+        <div class="console-heading">
           <div>
-            <p class="eyebrow" id="players-title">Players ready</p>
-            <strong><span id="ready-count">3</span> / 6 synchronized</strong>
+            <span class="eyebrow" id="console-title">Next launch window</span>
+            <strong id="launch-clock">00:00</strong>
           </div>
-          <span class="room-code">ROOM T3-256</span>
+          <div class="journey-counter"><span>Journey</span><strong id="journey-count">0 / 30</strong></div>
         </div>
-        <div class="player-grid" id="player-grid"></div>
+        <div class="journey-track" aria-label="Question journey progress"><span id="journey-progress"></span></div>
+        <div class="mission-modes">
+          <article><span class="mode-icon">◎</span><div><strong>Signal Scan</strong><small>Choose the strongest answer</small></div></article>
+          <article><span class="mode-icon">◇</span><div><strong>Truth Gate</strong><small>Resolve a binary claim</small></div></article>
+          <article><span class="mode-icon">≋</span><div><strong>Sequence Lock</strong><small>Find the correct process</small></div></article>
+        </div>
         <button id="ready-button" class="primary-button" type="button">
-          <span>Synchronize &amp; Ready</span>
-          <small>Join the mission</small>
+          <span>Synchronize &amp; Enter</span>
+          <small>One player is enough to launch</small>
         </button>
+        <p class="prototype-note">Preview mode · no production $PoC is issued</p>
       </section>
     </section>
 
     <section class="screen countdown-screen" id="countdown-screen" aria-live="assertive">
-      <p class="eyebrow">Matrix synchronization</p>
-      <div class="countdown-rings">
-        <div class="countdown-value" id="countdown-value">3</div>
-      </div>
+      <span class="eyebrow">Matrix synchronization</span>
+      <div class="countdown-rings"><div class="countdown-value" id="countdown-value">3</div></div>
+      <h2 id="countdown-title">Aligning your identity</h2>
       <p id="countdown-copy">Locking the mission room...</p>
+      <div class="sync-steps"><span class="active"></span><span></span><span></span></div>
     </section>
 
     <section class="screen quiz-screen" id="quiz-screen" aria-labelledby="question-text">
       <div class="quiz-topline">
-        <div>
-          <p class="eyebrow" id="question-number">Question 1 of 5</p>
+        <div class="question-position">
+          <span class="eyebrow" id="question-number">Question 1 of 10</span>
           <div class="progress-track"><span id="mission-progress"></span></div>
         </div>
+        <div class="streak-chip"><span>Streak</span><strong id="streak-value">0</strong></div>
         <div class="timer" id="timer" aria-label="Time remaining">
           <svg viewBox="0 0 44 44" aria-hidden="true">
             <circle class="timer-base" cx="22" cy="22" r="18"></circle>
@@ -95,52 +105,76 @@
         </div>
       </div>
 
-      <div class="question-stage">
-        <div class="category-pill" id="category-pill">Twin Matrix</div>
-        <h2 id="question-text">Loading mission...</h2>
-        <div class="answer-grid" id="answer-grid"></div>
+      <div class="question-layout">
+        <aside class="dimension-rail" aria-label="Unlocked dimensions">
+          <span>Dimensions</span>
+          <div id="dimension-nodes"></div>
+        </aside>
+        <div class="question-stage" id="question-stage">
+          <div class="question-heading">
+            <span class="category-pill" id="category-pill">Twin Matrix</span>
+            <span class="interaction-label" id="interaction-label">Signal Scan</span>
+          </div>
+          <h2 id="question-text">Loading mission...</h2>
+          <p class="question-instruction" id="question-instruction">Select one answer.</p>
+          <div class="answer-grid" id="answer-grid"></div>
+          <div class="reveal-panel" id="reveal-panel" hidden>
+            <div class="reveal-symbol" id="reveal-symbol">✓</div>
+            <div>
+              <span id="reveal-label">Dimension unlocked</span>
+              <strong id="reveal-answer"></strong>
+              <p id="reveal-explanation"></p>
+            </div>
+            <button class="next-button" id="next-question" type="button">Next dimension <span>→</span></button>
+          </div>
+        </div>
       </div>
 
       <div class="race-strip">
-        <div class="mini-players" id="mini-players"></div>
-        <p><strong id="answering-count">5</strong> players answering</p>
-        <div class="score-chip"><span>Your reward</span><strong id="running-reward">0 $PoC</strong></div>
+        <div class="network-pulse"><span></span><strong id="network-count">148</strong> explorers in the network</div>
+        <div class="score-chip"><span>Mission reward</span><strong id="running-reward">0 $PoC</strong></div>
       </div>
     </section>
 
     <section class="screen result-screen" id="result-screen" aria-labelledby="result-title">
       <div class="result-halo" aria-hidden="true"></div>
-      <p class="eyebrow" id="result-eyebrow">Matrix synchronized</p>
-      <div class="rank-medallion" id="rank-medallion">1</div>
-      <h2 id="result-title">Mission complete</h2>
-      <p class="result-subtitle" id="result-subtitle">Your identity held steady through the Matrix.</p>
+      <span class="eyebrow">Mission complete</span>
+      <div class="result-mark" id="result-mark">A</div>
+      <h2 id="result-title">Matrix synchronized</h2>
+      <p class="result-subtitle" id="result-subtitle">Ten new dimensions are now part of your journey.</p>
 
       <div class="reward-card">
-        <div>
-          <span>Reward earned</span>
-          <strong id="final-reward">25 $PoC</strong>
-        </div>
-        <div>
-          <span>Correct answers</span>
-          <strong id="final-score">5 / 5</strong>
-        </div>
-        <div>
-          <span>Ledger state</span>
-          <strong class="confirmed">Simulation</strong>
-        </div>
+        <div><span>Reward preview</span><strong id="final-reward">0 $PoC</strong></div>
+        <div><span>Accuracy</span><strong id="final-score">0 / 10</strong></div>
+        <div><span>Best streak</span><strong id="final-streak">0</strong></div>
+        <div><span>Journey</span><strong id="final-journey">10 / 30</strong></div>
       </div>
 
-      <div class="result-actions">
-        <button id="play-again" class="primary-button compact" type="button">Play again</button>
-        <button id="review-answers" class="secondary-button" type="button">Review mission</button>
+      <div class="result-tabs" role="tablist" aria-label="Mission results">
+        <button class="tab-button active" data-panel="leaderboard-panel" role="tab" type="button">Leaderboard</button>
+        <button class="tab-button" data-panel="review-panel" role="tab" type="button">Answer review</button>
       </div>
-      <div class="review-panel" id="review-panel" hidden></div>
+      <div class="result-panel" id="leaderboard-panel" role="tabpanel"></div>
+      <div class="result-panel" id="review-panel" role="tabpanel" hidden></div>
+
+      <div class="result-actions">
+        <button id="next-mission" class="primary-button compact" type="button">Enter next mission</button>
+        <button id="reset-preview" class="text-button" type="button">Reset preview journey</button>
+      </div>
+    </section>
+
+    <section class="screen journey-screen" id="journey-screen">
+      <div class="journey-complete-mark">30</div>
+      <span class="eyebrow">Journey complete</span>
+      <h2>You explored every available dimension.</h2>
+      <p>New missions will become available when reviewed questions are published.</p>
+      <button id="journey-results" class="secondary-button" type="button">View journey results</button>
     </section>
   </main>
 
   <footer>
-    <span>Web gameplay prototype</span>
-    <span>No production $PoC is awarded</span>
+    <span>Web gameplay preview</span>
+    <span>Production identity and ledger settlement are not enabled</span>
   </footer>
 
   <script src="./game.js"></script>

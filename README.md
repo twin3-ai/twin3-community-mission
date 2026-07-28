@@ -2,7 +2,7 @@
 
 A browser-based Twin Matrix knowledge game for the twin3 community.
 
-Players enter a live-style mission room, answer five questions, and receive a
+Players enter a live-style mission room, answer ten questions, and receive a
 simulated `$PoC` result. The current release is a public gameplay prototype: it
 does not write to the production contributor ledger or issue real rewards.
 
@@ -14,10 +14,13 @@ https://twin3-community-mission.mingwen.chatgpt.site
 
 - Responsive desktop and mobile gameplay
 - Animated Twin Matrix mission lobby
-- Five-question timed quiz
+- Thirty-question preview bank with ten unseen questions per mission
+- Signal Scan, Truth Gate, and Sequence Lock interactions
+- Per-question answer reveal and explanation
+- Device-local no-repeat journey progress
 - Music and sound controls
 - Answer feedback and mission review
-- Simulated player room and `$PoC` settlement
+- Mission leaderboard and simulated `$PoC` settlement
 - Canonical twin3 product visual system
 - Reduced-motion support
 
